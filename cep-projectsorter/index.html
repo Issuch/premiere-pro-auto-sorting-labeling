@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Project Sorter (CEP)</title>
+  <style>
+    body{font:12px Segoe UI,Arial;color:#eaeaea;background:#1e1e1e;margin:0}
+    .toolbar{display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid #333}
+    .btn{border:1px solid #3a3a3a;background:#2a2a2a;color:#eaeaea;padding:6px 10px;border-radius:6px;cursor:pointer}
+    .status{margin-left:auto;color:#8a8a8a}
+    input[type="text"]{border:1px solid #3a3a3a;background:#2a2a2a;color:#eaeaea;padding:5px 8px;border-radius:6px;outline:none;width:100%}
+    select{border:1px solid #3a3a3a;background:#2a2a2a;color:#eaeaea;padding:5px 8px;border-radius:6px;outline:none;width:100%}
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="playBtn" class="btn">Play</button>
+    <button id="autoBtn" class="btn" aria-pressed="false">Auto</button>
+    <span id="status" class="status">Idle</span>
+  </div>
+  <div class="settings" style="padding:8px; display:grid; grid-template-columns: auto 1fr; gap:6px; align-items:center;">
+    <div>Auto on startup</div>
+    <div><input type="checkbox" id="autoOnStartup"></div>
+
+    <div>Debug mode</div>
+    <div><input type="checkbox" id="debugMode"></div>
+
+    <div>Sort Video</div>
+    <div><input type="checkbox" id="sort-Video" checked></div>
+    <div>Sort VideoOnly</div>
+    <div><input type="checkbox" id="sort-VideoOnly" checked></div>
+    <div>Sort Audio</div>
+    <div><input type="checkbox" id="sort-Audio" checked></div>
+    <div>Sort Images</div>
+    <div><input type="checkbox" id="sort-Images" checked></div>
+    <div>Sort Graphics</div>
+    <div><input type="checkbox" id="sort-Graphics" checked></div>
+    <div>Sort Sequences</div>
+    <div><input type="checkbox" id="sort-Sequences" checked></div>
+
+    <div>Video bin name</div>
+    <div><input type="text" id="bin-Video" placeholder="Video"></div>
+    <div>VideoOnly bin name</div>
+    <div><input type="text" id="bin-VideoOnly" placeholder="VideoOnly"></div>
+    <div>Audio bin name</div>
+    <div><input type="text" id="bin-Audio" placeholder="Audio"></div>
+    <div>Images bin name</div>
+    <div><input type="text" id="bin-Images" placeholder="Images"></div>
+    <div>Graphics bin name</div>
+    <div><input type="text" id="bin-Graphics" placeholder="Graphics"></div>
+    <div>Sequences bin name</div>
+    <div><input type="text" id="bin-Sequences" placeholder="Sequences"></div>
+
+    <div>Rules</div>
+    <div><button id="addRuleBtn" class="btn" type="button">+</button></div>
+    <div style="grid-column: 1 / -1;">
+      <div id="rulesContainer"></div>
+    </div>
+
+    <div>Apply labels to items</div>
+    <div><input type="checkbox" id="applyLabels"></div>
+    <div>Video label</div>
+    <div><select id="label-Video"></select></div>
+    <div>VideoOnly label</div>
+    <div><select id="label-VideoOnly"></select></div>
+    <div>Audio label</div>
+    <div><select id="label-Audio"></select></div>
+    <div>Images label</div>
+    <div><select id="label-Images"></select></div>
+    <div>Graphics label</div>
+    <div><select id="label-Graphics"></select></div>
+    <div>Sequences label</div>
+    <div><select id="label-Sequences"></select></div>
+  </div>
+  <script src="js/libs/CSInterface.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
