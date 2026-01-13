@@ -22,3 +22,8 @@ C:\Program Files (x86)\Common Files\Adobe\CEP\extensions
 <img width="816" height="672" alt="image" src="https://github.com/user-attachments/assets/dceb1886-b9ee-4aca-b9bc-dc23aa62f36d" />
 <img width="1050" height="426" alt="image" src="https://github.com/user-attachments/assets/acee19b3-b492-4162-91ae-dd6127afe4bc" />
 
+
+
+
+
+My Discord https://discord.gg/2GaXAPGCxE
