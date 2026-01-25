@@ -2,7 +2,7 @@
   var cs = new CSInterface();
   function $(id){return document.getElementById(id)}
   function setStatus(t){var s=$("status"); if(s) s.textContent=t}
-  function evalJSX(code, cb){try{cs.evalScript(code, function(res){if(cb)cb(res)})}catch(e){setStatus('Error')}}
+  function evalJSX(code, cb){try{cs.evalScript(code, function(res){if(cb)cb(res)})}catch(e){setStatus('Error'); try{ if(cb) cb('ERR:' + e); }catch(_e2){} }}
   function sortOnce(){
     var s;
     try{ s = currentSettings(); }catch(_e0){ s = {}; }
@@ -74,6 +74,8 @@
   }
 
   var autoOn=false; var importListeners=[]; var lastCount=null; var autoDebounceTimer=null;
+  var autoBusy=false; var autoQueued=false; var autoForcePending=false; var autoBusySince=0;
+  var tlLabelDebounceTimer=null; var tlLabelBusy=false; var tlLabelQueued=false; var tlLabelLastAt=0; var tlLabelBusySince=0;
   var fallbackPollTimer=null;
   var fallbackDelayMs=1200;
   var fallbackFastEndsAt=0;
@@ -382,41 +384,92 @@
 
   function scheduleAutoSort(force, newCount){
     if(!autoOn) return;
+    if(force) autoForcePending = true;
     if(autoDebounceTimer){ clearTimeout(autoDebounceTimer); autoDebounceTimer=null; }
     autoDebounceTimer = setTimeout(function(){
       autoDebounceTimer = null;
-      if(force){
-        // Apply labels immediately for newly seen items; uses JSX-side cache to stay cheap
-        evalJSX('projectSorter_labelNewItems();');
-        evalJSX('projectSorter_labelTimelineGraphics();');
-        setStatus('Auto: sorting');
-        evalJSX('projectSorter_sortAll(false);', function(){ setStatus('Auto: idle'); });
-        if(typeof newCount === 'number' && !isNaN(newCount)){
-          lastCount = newCount;
-        }else{
-          evalJSX('projectSorter_projectNonBinCount();', function(res){
-            var curr = parseInt(res||'0',10);
-            if(!isNaN(curr)) lastCount = curr;
-          });
-        }
-        return;
-      }
-
       // Compare count only on event to avoid constant polling
-      evalJSX('projectSorter_projectNonBinCount();', function(res){
-        var curr = parseInt(res||'0',10);
-        if(isNaN(curr)) return;
-        if(typeof lastCount !== 'number'){ lastCount = curr; return; }
-        if(curr > lastCount){
-          // label ASAP; sort can follow (debounced)
-          evalJSX('projectSorter_labelNewItems();');
-          evalJSX('projectSorter_labelTimelineGraphics();');
-          setStatus('Auto: sorting');
-          evalJSX('projectSorter_sortAll(false);', function(){ setStatus('Auto: idle'); });
+      if(!autoOn) return;
+      try{
+        if(autoBusy && autoBusySince && (Date.now() - autoBusySince) > 15000){
+          autoBusy = false;
+          autoQueued = false;
+          autoBusySince = 0;
         }
-        lastCount = curr;
+      }catch(_ab){}
+      if(autoBusy){ autoQueued = true; return; }
+      autoBusy = true;
+      autoBusySince = Date.now();
+
+      var last = (typeof lastCount === 'number' && !isNaN(lastCount)) ? lastCount : -1;
+      var doForce = autoForcePending ? 1 : 0;
+      autoForcePending = false;
+
+      var script = '';
+      script += 'var __ps_last=' + String(last) + ';';
+      script += 'var __ps_curr=parseInt(projectSorter_projectNonBinCount()||"0",10);';
+      script += 'var __ps_do=(' + String(doForce) + '===1) || (__ps_last>=0 && __ps_curr>__ps_last);';
+      script += 'if(__ps_do){ projectSorter_labelNewItems(); projectSorter_sortAll(false); }';
+      script += '"cnt="+__ps_curr+"|did="+(__ps_do?1:0);';
+
+      setStatus('Auto: working');
+      evalJSX(script, function(res){
+        autoBusy = false;
+        autoBusySince = 0;
+        var out = (res && String(res)) || '';
+        var m = /cnt=(\d+)\|did=(\d+)/.exec(out);
+        var did = 0;
+        if(m){
+          var c = parseInt(m[1], 10);
+          if(!isNaN(c)) lastCount = c;
+          did = parseInt(m[2], 10);
+          if(isNaN(did)) did = 0;
+        }
+        if(did){ bumpFallbackFastWindow(2500); }
+        if(autoOn){
+          if(did){
+            setStatus('Auto: idle');
+          }else{
+            setStatus('Auto: on');
+          }
+        }
+        if(autoOn && autoQueued){
+          autoQueued = false;
+          scheduleAutoSort(false);
+        }
       });
     }, 75);
+  }
+
+  function scheduleTimelineLabel(){
+    if(!autoOn) return;
+    if(tlLabelDebounceTimer){ clearTimeout(tlLabelDebounceTimer); tlLabelDebounceTimer=null; }
+    tlLabelDebounceTimer = setTimeout(function(){
+      tlLabelDebounceTimer = null;
+      if(!autoOn) return;
+      var now = Date.now();
+      var minGap = 800;
+      if(now - tlLabelLastAt < minGap){
+        scheduleTimelineLabel();
+        return;
+      }
+      try{
+        if(tlLabelBusy && tlLabelBusySince && (Date.now() - tlLabelBusySince) > 12000){
+          tlLabelBusy = false;
+          tlLabelQueued = false;
+          tlLabelBusySince = 0;
+        }
+      }catch(_tlw){}
+      if(tlLabelBusy){ tlLabelQueued = true; return; }
+      tlLabelBusy = true;
+      tlLabelBusySince = Date.now();
+      tlLabelLastAt = now;
+      evalJSX('projectSorter_labelTimelineGraphics();', function(){
+        tlLabelBusy = false;
+        tlLabelBusySince = 0;
+        if(autoOn && tlLabelQueued){ tlLabelQueued = false; scheduleTimelineLabel(); }
+      });
+    }, 140);
   }
 
   function bumpFallbackFastWindow(ms){
@@ -435,32 +488,16 @@
 
     var tick = function(){
       if(!autoOn){ fallbackPollTimer=null; return; }
+      scheduleAutoSort(false);
+      scheduleTimelineLabel();
 
-      evalJSX('projectSorter_projectNonBinCount();', function(res){
-        var curr = parseInt(res||'0',10);
-        if(!isNaN(curr)){
-          if(typeof lastCount !== 'number'){
-            lastCount = curr;
-          }else if(curr > lastCount){
-            // label new items immediately, then sort (debounced)
-            evalJSX('projectSorter_labelNewItems();');
-            evalJSX('projectSorter_labelTimelineGraphics();');
-            scheduleAutoSort(true, curr);
-            // keep it fast briefly to catch burst imports
-            bumpFallbackFastWindow(2500);
-          }
-          lastCount = curr;
-        }
+      if(Date.now() < fallbackFastEndsAt){
+        fallbackDelayMs = 300;
+      }else{
+        fallbackDelayMs = Math.min(Math.round(Math.max(fallbackDelayMs, 1200) * 1.6), 7000);
+      }
 
-        // choose next delay: fast while in window, else exponential backoff
-        if(Date.now() < fallbackFastEndsAt){
-          fallbackDelayMs = 300;
-        }else{
-          fallbackDelayMs = Math.min(Math.round(Math.max(fallbackDelayMs, 1200) * 1.6), 7000);
-        }
-
-        fallbackPollTimer = setTimeout(tick, fallbackDelayMs);
-      });
+      fallbackPollTimer = setTimeout(tick, fallbackDelayMs);
     };
 
     fallbackPollTimer = setTimeout(tick, fallbackDelayMs);
@@ -477,20 +514,14 @@
       'com.adobe.csxs.events.ImportCompleted',
       'com.adobe.csxs.events.ProjectPanel.ImportCompleted',
       'com.adobe.csxs.events.ProjectItemsAdded',
-      'com.adobe.csxs.events.ItemAdded',
-      'com.adobe.csxs.events.ProjectChanged',
-      'com.adobe.csxs.events.PremierePro.ProjectChanged',
       'com.adobe.csxs.events.PremierePro.ProjectItemsAdded',
       'com.adobe.csxs.events.PremierePro.ProjectItemAdded',
-      'com.adobe.csxs.events.PremierePro.ActiveSequenceChanged',
-      'com.adobe.csxs.events.PremierePro.SequenceChanged',
-      'com.adobe.csxs.events.PremierePro.TimelineSelectionChanged'
+      'com.adobe.csxs.events.PremierePro.ProjectChanged'
     ];
     var handler=function(){
       // label immediately (cheap due to JSX cache); schedule sort separately
-      evalJSX('projectSorter_labelNewItems();');
-      evalJSX('projectSorter_labelTimelineGraphics();');
       scheduleAutoSort(false);
+      scheduleTimelineLabel();
       bumpFallbackFastWindow(2000);
     };
     for(var i=0;i<events.length;i++){
@@ -509,17 +540,17 @@
     if(autoOn){
       setStatus('Auto: on');
       attachImportListeners();
-      // initialize baseline count once, then react only to import events
-      evalJSX('projectSorter_projectNonBinCount();', function(res){
-        var curr = parseInt(res||'0',10);
-        lastCount = isNaN(curr) ? null : curr;
-      });
+      scheduleAutoSort(true);
+      scheduleTimelineLabel();
       // Reliable fallback for cases where Premiere doesn't emit CSXS events (e.g. Explorer -> timeline drag&drop)
       startFallbackPolling();
     }else{
       detachImportListeners();
       if(autoDebounceTimer){ clearTimeout(autoDebounceTimer); autoDebounceTimer=null; }
       stopFallbackPolling();
+      if(tlLabelDebounceTimer){ clearTimeout(tlLabelDebounceTimer); tlLabelDebounceTimer=null; }
+      tlLabelBusy = false; tlLabelQueued = false; tlLabelLastAt = 0; tlLabelBusySince = 0;
+      autoBusy = false; autoQueued = false; autoForcePending = false; autoBusySince = 0;
       lastCount = null;
       setStatus('Auto: off');
     }

@@ -578,6 +578,9 @@ function projectSorter_labelNewItems(){
                 else if (GRAPHICS_EXT[ext]) target = "Graphics";
             }
 
+            // Для правил типа Any нужно уметь работать даже когда тип не определён (расширение неизвестно).
+            var itemType = target ? target : 'Any';
+
             // Rules (type + keyword) may override label
             var ruleLabel = null;
             try{
@@ -586,7 +589,7 @@ function projectSorter_labelNewItems(){
                         var rr = __ps_rules[ri];
                         if(!rr || rr.enabled === false) continue;
                         var rType = String(rr.type || 'Any');
-                        if(rType !== 'Any' && target && rType !== target) continue;
+                        if(rType !== 'Any' && rType !== itemType) continue;
                         var kw = String(rr.keyword || '');
                         if(!kw) continue;
                         if(!keywordMatchItem(item, kw)) continue;
@@ -1046,7 +1049,8 @@ function projectSorter_sortAll(conformFlag) {
                 else if (GRAPHICS_EXT[ext]) target = "Graphics";
             }
 
-            if (!target) continue;
+            // Для правил типа Any нужно уметь работать даже когда тип не определён (расширение неизвестно).
+            var itemType = target ? target : 'Any';
 
             // Apply rules first: move to custom root bin and set label.
             try{
@@ -1055,7 +1059,7 @@ function projectSorter_sortAll(conformFlag) {
                         var rr = __ps_rules[ri];
                         if(!rr || rr.enabled === false) continue;
                         var rType = String(rr.type || 'Any');
-                        if(rType !== 'Any' && target && rType !== target) continue;
+                        if(rType !== 'Any' && rType !== itemType) continue;
                         var kw = String(rr.keyword || '');
                         if(!kw) continue;
                         if(!keywordMatchItem(item, kw)) continue;
@@ -1091,6 +1095,11 @@ function projectSorter_sortAll(conformFlag) {
                 }
             }catch(_r1){}
             if(!target) continue;
+
+            // Если тип не определён (Any) и правило не сработало — пропускаем.
+            if(itemType === 'Any'){
+                continue;
+            }
 
             // If disabled, skip ONLY default type-based sorting.
             if(__ps_sortEnabledByType && __ps_sortEnabledByType[target] === false){
