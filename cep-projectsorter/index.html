@@ -25,31 +25,18 @@
     <div>Debug mode</div>
     <div><input type="checkbox" id="debugMode"></div>
 
-    <div>Sort Video</div>
-    <div><input type="checkbox" id="sort-Video" checked></div>
-    <div>Sort VideoOnly</div>
-    <div><input type="checkbox" id="sort-VideoOnly" checked></div>
-    <div>Sort Audio</div>
-    <div><input type="checkbox" id="sort-Audio" checked></div>
-    <div>Sort Images</div>
-    <div><input type="checkbox" id="sort-Images" checked></div>
-    <div>Sort Graphics</div>
-    <div><input type="checkbox" id="sort-Graphics" checked></div>
-    <div>Sort Sequences</div>
-    <div><input type="checkbox" id="sort-Sequences" checked></div>
-
     <div>Video bin name</div>
-    <div><input type="text" id="bin-Video" placeholder="Video"></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="sort-Video" checked><input type="text" id="bin-Video" placeholder="Video"></div>
     <div>VideoOnly bin name</div>
-    <div><input type="text" id="bin-VideoOnly" placeholder="VideoOnly"></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="sort-VideoOnly" checked><input type="text" id="bin-VideoOnly" placeholder="VideoOnly"></div>
     <div>Audio bin name</div>
-    <div><input type="text" id="bin-Audio" placeholder="Audio"></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="sort-Audio" checked><input type="text" id="bin-Audio" placeholder="Audio"></div>
     <div>Images bin name</div>
-    <div><input type="text" id="bin-Images" placeholder="Images"></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="sort-Images" checked><input type="text" id="bin-Images" placeholder="Images"></div>
     <div>Graphics bin name</div>
-    <div><input type="text" id="bin-Graphics" placeholder="Graphics"></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="sort-Graphics" checked><input type="text" id="bin-Graphics" placeholder="Graphics"></div>
     <div>Sequences bin name</div>
-    <div><input type="text" id="bin-Sequences" placeholder="Sequences"></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="sort-Sequences" checked><input type="text" id="bin-Sequences" placeholder="Sequences"></div>
 
     <div>Rules</div>
     <div><button id="addRuleBtn" class="btn" type="button">+</button></div>
@@ -57,20 +44,26 @@
       <div id="rulesContainer"></div>
     </div>
 
+    <div>Folder Rules</div>
+    <div><button id="addFolderRuleBtn" class="btn" type="button">+</button></div>
+    <div style="grid-column: 1 / -1;">
+      <div id="folderRulesContainer"></div>
+    </div>
+
     <div>Apply labels to items</div>
     <div><input type="checkbox" id="applyLabels"></div>
     <div>Video label</div>
-    <div><select id="label-Video"></select></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="applyLabel-Video" checked><select id="label-Video"></select></div>
     <div>VideoOnly label</div>
-    <div><select id="label-VideoOnly"></select></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="applyLabel-VideoOnly" checked><select id="label-VideoOnly"></select></div>
     <div>Audio label</div>
-    <div><select id="label-Audio"></select></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="applyLabel-Audio" checked><select id="label-Audio"></select></div>
     <div>Images label</div>
-    <div><select id="label-Images"></select></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="applyLabel-Images" checked><select id="label-Images"></select></div>
     <div>Graphics label</div>
-    <div><select id="label-Graphics"></select></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="applyLabel-Graphics" checked><select id="label-Graphics"></select></div>
     <div>Sequences label</div>
-    <div><select id="label-Sequences"></select></div>
+    <div style="display:flex; gap:6px; align-items:center;"><input type="checkbox" id="applyLabel-Sequences" checked><select id="label-Sequences"></select></div>
   </div>
   <script src="js/libs/CSInterface.js"></script>
   <script src="js/main.js"></script>
